@@ -5,6 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorkemsari/golang-rest-api/handler"
+	mw "github.com/gorkemsari/golang-rest-api/middleware"
 )
 
 type Route struct {
@@ -12,13 +13,15 @@ type Route struct {
 	Method      string
 	Pattern     string
 	HandlerFunc http.HandlerFunc
+	Auth        bool
 }
 
 type Routes []Route
 
 var routes = Routes{
-	Route{"CityAll", "GET", "/cities", handler.CityAll},
-	Route{"City", "GET", "/cities/{id}", handler.City},
+	Route{"Token", "POST", "/auth/token", handler.Token, false},
+	Route{"CityAll", "GET", "/cities", handler.CityAll, true},
+	Route{"City", "GET", "/cities/{id}", handler.City, true},
 }
 
 func NewRouter() *mux.Router {
@@ -28,6 +31,9 @@ func NewRouter() *mux.Router {
 		var handler http.Handler
 
 		handler = route.HandlerFunc
+		if route.Auth {
+			mw.Auth(handler)
+		}
 
 		router.
 			Methods(route.Method).
